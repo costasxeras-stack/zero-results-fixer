@@ -107,7 +107,7 @@
       ],
       "executeOnce": true,
       "retryOnFail": true,
-      "maxTries": 3,
+      "maxTries": 5,
       "waitBetweenTries": 5000
     },
     {
@@ -129,7 +129,7 @@
         "options": {
           "batching": {
             "batch": {
-              "batchSize": 5,
+              "batchSize": 1,
               "batchInterval": 200
             }
           },
@@ -138,7 +138,7 @@
               "neverError": false
             }
           },
-          "timeout": 30000
+          "timeout": 60000
         }
       },
       "id": "3410ea7e-a5a1-521f-97c5-0f0171b16e74",
@@ -148,7 +148,11 @@
       "position": [
         780,
         0
-      ]
+      ],
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000
     },
     {
       "parameters": {
@@ -245,7 +249,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const queries = $('Skip searches seen before').all();\nreturn $input.all().map((item, i) => {\n  const o = item.json.output || {};\n  const q = queries[i].json.query;\n  const rewrite = String(o.rewrite || '').trim().toLowerCase();\n  const ok = !item.json.error && o.cause;\n  return { json: {\n    proposal_id: 'zr_' + $now.toFormat('yyyyLLdd') + '_' + Math.random().toString(36).slice(2, 8),\n    token: Math.random().toString(36).slice(2, 12),\n    query: q,\n    found_at: $now.toISO(),\n    cause: ok ? o.cause : 'ai_failed',\n    rewrite: ok && rewrite !== q.toLowerCase() ? rewrite : '',\n    ai_confidence: ok ? Math.max(0, Math.min(1, Number(o.confidence) || 0)) : 0,\n    ai_reason: ok ? String(o.reason || '').slice(0, 300) : 'Claude could not be reached. Check this search by hand.',\n  } };\n});"
+        "jsCode": "const queries = $('Skip searches seen before').all();\nreturn $input.all().map((item, i) => {\n  const o = item.json.output || {};\n  const q = queries[i].json.query;\n  const rewrite = String(o.rewrite || '').trim().toLowerCase();\n  const ok = !item.json.error && o.cause;\n  return { json: {\n    proposal_id: 'zr_' + $now.toFormat('yyyyLLdd') + '_' + Math.random().toString(36).slice(2, 8),\n    token: Math.random().toString(36).slice(2, 12),\n    query: q,\n    found_at: $now.toISO(),\n    cause: ok ? o.cause : 'ai_failed',\n    rewrite: ok && rewrite !== q.toLowerCase() ? rewrite : '',\n    ai_confidence: ok ? Math.max(0, Math.min(1, Number(o.confidence) || 0)) : 0,\n    ai_reason: ok ? String(o.reason || '').slice(0, 300) : 'Claude returned an error or an answer in the wrong format. Check this search by hand.',\n  } };\n});"
       },
       "id": "3de702b7-612d-5e5f-b5c9-e54d57cd4f94",
       "name": "Shape proposal",
@@ -262,7 +266,7 @@
         "options": {
           "batching": {
             "batch": {
-              "batchSize": 5,
+              "batchSize": 1,
               "batchInterval": 200
             }
           },
@@ -271,7 +275,7 @@
               "neverError": false
             }
           },
-          "timeout": 30000
+          "timeout": 60000
         }
       },
       "id": "9131fe42-c560-5394-bce6-849f3c48a158",
@@ -282,7 +286,10 @@
         560,
         380
       ],
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000
     },
     {
       "parameters": {

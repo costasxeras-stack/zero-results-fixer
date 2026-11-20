@@ -1,0 +1,61 @@
+search,cause,claude_rewrite,claude_confidence,status,products_found,ndcg10_rewrite,ndcg10_any_word,top10_labelled_rewrite,top10_labelled_any_word
+gurney slade 56,brand_or_collection,gurney slade,0.4,pending,7,0.581,0.581,6,6
+stoneford end tables white and wood,brand_or_collection,end tables white wood,0.5,pending,23,1,1,10,10
+moen matte black hooks,brand_or_collection,matte black hooks,0.7,pending,4,0.359,0.679,2,6
+certified international melamine,brand_or_collection,melamine,0.6,pending,270,1,1,10,10
+dorel vanity,brand_or_collection,vanity,0.7,pending,1220,0.48,0.48,10,10
+wall art fiji,too_specific,wall art,0.6,pending,1015,0.293,0.176,2,2
+full metal bed rose gold,too_specific,metal bed,0.6,pending,400,0.694,0.153,10,8
+rose gold lounge,too_specific,rose gold,0.5,pending,52,0.197,0.246,10,10
+gracie oaks 62 oller 14 ceiling fan,brand_or_collection,ceiling fan,0.5,pending,122,1,1,10,10
+arched christmas tree,wording,christmas tree,0.7,pending,133,1,1,10,10
+black hanging bookshelf,too_specific,black bookshelf,0.6,pending,7,0.121,0.111,2,6
+star wars rug,brand_or_collection,rug,0.3,pending,1655,0,0,0,10
+"bedroom wall decor floral, multicolored with some teal (prints)",too_specific,floral wall decor,0.6,pending,22,0.221,0.237,7,7
+big basket for dirty cloths,wording,laundry basket,0.8,pending,183,0.2,0.541,4,8
+fleur de lis living candle wall sconce bronze,too_specific,fleur de lis wall sconce,0.5,pending,4,0.386,0.443,4,10
+"""fawkes 36"""" blue vanity""",brand_or_collection,blue vanity,0.6,pending,7,0.22,1,1,10
+door pulls bronze matte 4 inch,too_specific,bronze door pull,0.7,pending,1,0,0.685,0,8
+kraus kitchen sink faucet oletto kpf 2820 sfs,brand_or_collection,kitchen sink faucet,0.6,pending,57,0.694,0.742,10,10
+light wood nightstand with silver accents,too_specific,nightstand,0.8,pending,533,0.322,0.936,3,9
+trinaic towel rod,brand_or_collection,towel rod,0.6,pending,28,1,1,10,10
+kelly clarkson light fixtures,brand_or_collection,light fixtures,0.4,pending,412,0.098,0.463,3,6
+pull out sleeper loveseat,wording,sleeper loveseat,0.6,pending,13,0.693,0.537,9,5
+donaldson teak couch,brand_or_collection,teak couch,0.6,pending,2,0,0.316,0,4
+marlon tufted queen bed,brand_or_collection,tufted queen bed,0.6,pending,81,0.694,1,10,10
+wood floor protector mat,too_specific,floor protector,0.6,pending,27,0.242,0.444,6,9
+moen multi function dual shower head,brand_or_collection,dual shower head,0.5,pending,23,1,1,10,10
+moen 5995 arbor one,brand_or_collection,arbor faucet,0.3,pending,7,0.801,0.489,7,10
+navy and peach bedding,too_specific,navy bedding,0.5,pending,18,0.535,0.533,4,4
+ottoman bed queen,too_specific,ottoman bed,0.8,pending,40,0.76,0,7,0
+tressler rug,brand_or_collection,rug,0.5,pending,1655,1,1,10,10
+fortunat coffee table,brand_or_collection,coffee table,0.6,pending,1785,0.694,0.694,10,10
+croscill ashton,brand_or_collection,croscill,0.5,pending,3,0.22,0.861,3,10
+wrought tv stand,too_specific,tv stand,0.8,pending,524,0.582,0.582,10,10
+togo chair,brand_or_collection,chair,0.4,pending,5225,1,1,10,10
+cliffside 5 light candle style drum chandelier,too_specific,drum chandelier,0.7,pending,100,1,1,10,10
+urban outfitters duvet,brand_or_collection,duvet,0.8,pending,299,0.647,1,6,10
+outdoor sectional doning,spelling,outdoor sectional,0.8,pending,295,1,1,10,10
+gray leather cocktail table,too_specific,cocktail table,0.7,pending,1209,0.794,0.384,7,4
+midcentury tv unit,wording,tv stand,0.8,pending,524,0.12,0.148,4,3
+carpet 5x6,too_specific,carpet,0.7,pending,112,0.486,0.486,10,10
+bubble guppies chair,brand_or_collection,kids chair,0.4,pending,319,0,0.373,0,10
+tye dye duvet cover,spelling,tie dye duvet cover,0.9,pending,33,0.714,0.622,8,6
+glow in the dark silent wall clock,too_specific,wall clock,0.7,pending,295,0.47,0.887,10,10
+48 inch bathroom vanity with trough sink,too_specific,bathroom vanity,0.7,pending,852,1,1,10,10
+worn leather office chair,too_specific,leather office chair,0.7,pending,203,0.694,0.694,10,10
+nespresso vertuo next premium by breville with aeroccino,brand_or_collection,coffee machine,0.4,pending,18,1,1,10,10
+palram harmony greenhouses,not_sold,,0.85,no_fix,0,,,,
+wainscoting ideas,not_a_product_search,,0.9,no_fix,0,,,,
+promo codes or discounts,not_a_product_search,,0.95,no_fix,0,,,,
+ge top loading washer 4.5,not_sold,,0.9,no_fix,0,,,,
+propane gas dryer,not_sold,,0.85,no_fix,0,,,,
+12v dirt bike,not_sold,,0.9,no_fix,0,,,,
+garage door mail slot,not_sold,,0.9,no_fix,0,,,,
+auburn throw pillows,wording,rust throw pillows,0.5,fix_failed_test,0,,,,
+wisdom stone river 3-3/4,brand_or_collection,wisdom stone river,0.4,fix_failed_test,0,,,,
+wand bunk beds,ai_failed,,0,needs_review,0,,,,
+twin over full bunk beds cool desins,ai_failed,,0,needs_review,0,,,,
+one alium way,ai_failed,,0,needs_review,0,,,,
+minnestrista,ai_failed,,0,needs_review,0,,,,
+brush nickel faucet bathroom,ai_failed,,0,needs_review,0,,,,

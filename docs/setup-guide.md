@@ -32,6 +32,7 @@ About 30 minutes the first time. Use a laptop: the n8n editor is hard to use on 
 Open each node below, click **Credential to connect with > Create new credential**, fill it in, then **Save**.
 
 **Claude** (workflow 01, node **Claude**)
+On n8n Cloud the node can run on n8n's own AI credits: if the credential shows **Gateway credits**, there is nothing to do. Otherwise:
 1. Go to console.anthropic.com > **API keys** > **Create key**. Copy it.
 2. In n8n paste it into **API Key**.
 

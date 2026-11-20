@@ -1,4 +1,4 @@
-# Testing: v0.1.0
+# Testing: v0.1.1
 
 **How:** the six workflow files were imported into a local n8n **2.47.7** and published. Search Relevance Lab v0.1.0 ran locally, so every search was real. Claude and email (SMTP) were replaced by local stand-ins that record every request. A test-only webhook was added to the workflows that normally start by hand or on a schedule, so they could be started from a script. Those webhooks are not in the files in this repo. Date: 20 November 2026.
 
@@ -28,9 +28,23 @@
 | E1 | Weekly report | Email with causes, statuses, approval rate and demand signals | Pass |
 | X1 | Search service down | Run fails after 3 tries. Owner gets an email naming the failed step and the run link | Pass |
 
+## First live run on n8n Cloud (20 November 2026)
+
+The workflows were created in my n8n Cloud account and workflow 01 ran with the real Claude through n8n's built-in AI credits. Results are in the [case study](case-study.md).
+
+What the live run found and what changed:
+
+| Problem | Fix |
+|---|---|
+| Search Relevance Lab on Render's free plan was asleep. The first request got a "service unavailable" page and 3 tries were not enough | 5 tries for the first request |
+| Under steady load some searches took over 30 and then 60 seconds, and one slow search failed the whole run | One request at a time, 60-second limit, and a search that still times out is skipped this week instead of stopping the run (decision 0005) |
+| 5 of 60 searches came back as Claude failures, and the message said "Claude could not be reached" | The message now says Claude returned an error or an answer in the wrong format, which is what the node reports for both |
+| The weekly email step fails until a Gmail credential is added | Expected. Proposals are saved before that step, so nothing is lost |
+
+The review form (02) and rules API (03) are published on n8n Cloud. The rules API was called once and answered with an empty rule list, as expected with no approvals yet.
+
 ## Not yet tested
 
-- Claude on the real 60 searches (quality of causes and rewrites)
-- n8n Cloud specifics (credential screens, the published form URL)
-- Real email delivery through Gmail
-- Search Relevance Lab on Render's free plan waking up from sleep during a run (the first request has 3 tries with a 90-second limit each)
+- Real email delivery through Gmail (needs the owner's Gmail app password)
+- The review form on n8n Cloud with a real approval
+- A scheduled Monday run
