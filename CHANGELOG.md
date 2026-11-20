@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.1 (20 November 2026)
+## [0.1.1] (20 November 2026)
 
 ### Added
 - Results of the first live run with Claude on n8n Cloud: all 60 searches, in `docs/data/live-run-2026-11-20.csv`, and a script that scores the fixes against Search Relevance Lab's relevance labels.
@@ -11,7 +11,7 @@
 - Searches are sent one at a time with a 60-second limit, and the first request retries 5 times while the free search service wakes up.
 - The message for a failed Claude answer no longer claims Claude was unreachable when it answered in the wrong format.
 
-## 0.1.0 (20 November 2026)
+## [0.1.0] (20 November 2026)
 
 ### Added
 - Six n8n workflows: setup, weekly scan, review form, rules API, weekly report and error alerts.
