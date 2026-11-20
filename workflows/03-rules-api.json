@@ -1,0 +1,142 @@
+{
+  "name": "Zero Results Fixer · 03 Rules API",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Zero Results Fixer · 03 Rules for the search\nThe shop's search calls this URL (GET) and gets every approved rewrite as JSON. It can cache the list and apply a rule when a shopper's search matches `from` exactly.\n\nOnly approved, active rules are returned.",
+        "height": 220,
+        "width": 400
+      },
+      "id": "de393b87-26f5-5291-805b-77122449f01b",
+      "name": "About",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -460,
+        -220
+      ]
+    },
+    {
+      "parameters": {
+        "path": "zrf-rules",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "7550dd17-837f-5d30-9a98-671e1c883019",
+      "name": "Search asks for rules",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "7a5d0f3e-0003-4c00-9000-0000000003a1"
+    },
+    {
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "name",
+          "value": "zrf_rules"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "active",
+              "condition": "eq",
+              "keyValue": "={{ true }}"
+            }
+          ]
+        },
+        "returnAll": true
+      },
+      "id": "324e6c9a-da76-55bd-a27b-59ac8e2ded22",
+      "name": "Load active rules",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        220,
+        0
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const rules = $input.all().map(i => i.json).filter(r => r.from_query)\n  .map(r => ({ from: r.from_query, to: r.to_query, cause: r.cause, approved_at: r.approved_at }));\nreturn [{ json: { count: rules.length, rules } }];"
+      },
+      "id": "b369361e-78af-5ce3-999e-c17c4c88f369",
+      "name": "Shape rules",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "65add961-a492-58e8-ba8a-770912cabbfd",
+      "name": "Send rules",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        660,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Search asks for rules": {
+      "main": [
+        [
+          {
+            "node": "Load active rules",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load active rules": {
+      "main": [
+        [
+          {
+            "node": "Shape rules",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Shape rules": {
+      "main": [
+        [
+          {
+            "node": "Send rules",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Warsaw",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": []
+}

@@ -1,0 +1,434 @@
+{
+  "name": "Zero Results Fixer · 00 Setup (run once)",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Zero Results Fixer · 00 Setup\nRun once. Creates the three data tables and one settings row.\n\nAfter running, open **Overview > Data tables > zrf_settings** and fill in your own values: owner email, from email, the review form URL from workflow 02, and the search API.\n\nRunning it again does not duplicate anything.",
+        "height": 240,
+        "width": 380
+      },
+      "id": "9d3e5d0e-b733-587f-89e9-1bc26da6e3bc",
+      "name": "About",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -420,
+        -140
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "b7087c11-c05d-596f-9c13-91126d72f423",
+      "name": "Run setup",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "table",
+        "operation": "create",
+        "tableName": "zrf_settings",
+        "columns": {
+          "column": [
+            {
+              "name": "search_api_url",
+              "type": "string"
+            },
+            {
+              "name": "query_source_url",
+              "type": "string"
+            },
+            {
+              "name": "owner_email",
+              "type": "string"
+            },
+            {
+              "name": "from_email",
+              "type": "string"
+            },
+            {
+              "name": "review_form_url",
+              "type": "string"
+            },
+            {
+              "name": "max_queries_per_run",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {
+          "createIfNotExists": true
+        }
+      },
+      "id": "cdef2db1-a8d2-5120-8f85-2d2f545880d1",
+      "name": "Create settings table",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        220,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "table",
+        "operation": "create",
+        "tableName": "zrf_proposals",
+        "columns": {
+          "column": [
+            {
+              "name": "proposal_id",
+              "type": "string"
+            },
+            {
+              "name": "token",
+              "type": "string"
+            },
+            {
+              "name": "query",
+              "type": "string"
+            },
+            {
+              "name": "found_at",
+              "type": "date"
+            },
+            {
+              "name": "cause",
+              "type": "string"
+            },
+            {
+              "name": "rewrite",
+              "type": "string"
+            },
+            {
+              "name": "ai_confidence",
+              "type": "number"
+            },
+            {
+              "name": "ai_reason",
+              "type": "string"
+            },
+            {
+              "name": "results_after",
+              "type": "number"
+            },
+            {
+              "name": "top_results",
+              "type": "string"
+            },
+            {
+              "name": "status",
+              "type": "string"
+            },
+            {
+              "name": "decided_at",
+              "type": "date"
+            },
+            {
+              "name": "final_rewrite",
+              "type": "string"
+            },
+            {
+              "name": "decision_note",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {
+          "createIfNotExists": true
+        }
+      },
+      "id": "b759a628-d1f9-5221-aec6-8a569c904793",
+      "name": "Create proposals table",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        440,
+        0
+      ],
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "resource": "table",
+        "operation": "create",
+        "tableName": "zrf_rules",
+        "columns": {
+          "column": [
+            {
+              "name": "from_query",
+              "type": "string"
+            },
+            {
+              "name": "to_query",
+              "type": "string"
+            },
+            {
+              "name": "cause",
+              "type": "string"
+            },
+            {
+              "name": "proposal_id",
+              "type": "string"
+            },
+            {
+              "name": "approved_at",
+              "type": "date"
+            },
+            {
+              "name": "active",
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {
+          "createIfNotExists": true
+        }
+      },
+      "id": "cca671b5-bed6-5e1d-abd9-2fdd0960ff21",
+      "name": "Create rules table",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        660,
+        0
+      ],
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "name",
+          "value": "zrf_settings"
+        },
+        "matchType": "allConditions",
+        "filters": {},
+        "limit": 1
+      },
+      "id": "99d3c22d-32a7-5e83-9ee3-eebe1e44d437",
+      "name": "Load settings",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        880,
+        0
+      ],
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cee77735-c1ee-55ed-b06c-226d92239acd",
+              "leftValue": "={{ $json.search_api_url }}",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "783f35b4-ca83-55cf-bb37-9128c30b24a4",
+      "name": "No settings yet?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1100,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "row",
+        "operation": "insert",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "name",
+          "value": "zrf_settings"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "search_api_url": "https://search-relevance-lab.onrender.com",
+            "query_source_url": "https://search-relevance-lab.onrender.com/api/queries",
+            "owner_email": "you@example.com",
+            "from_email": "you@example.com",
+            "review_form_url": "PASTE_THE_PRODUCTION_URL_OF_THE_02_FORM",
+            "max_queries_per_run": "={{ 30 }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "search_api_url",
+              "displayName": "search_api_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "query_source_url",
+              "displayName": "query_source_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "owner_email",
+              "displayName": "owner_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "from_email",
+              "displayName": "from_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "review_form_url",
+              "displayName": "review_form_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "max_queries_per_run",
+              "displayName": "max_queries_per_run",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2f674ce5-4ef2-5f4e-b15f-34043c2df258",
+      "name": "Add default settings",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1320,
+        -100
+      ]
+    }
+  ],
+  "connections": {
+    "Run setup": {
+      "main": [
+        [
+          {
+            "node": "Create settings table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create settings table": {
+      "main": [
+        [
+          {
+            "node": "Create proposals table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create proposals table": {
+      "main": [
+        [
+          {
+            "node": "Create rules table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create rules table": {
+      "main": [
+        [
+          {
+            "node": "Load settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load settings": {
+      "main": [
+        [
+          {
+            "node": "No settings yet?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No settings yet?": {
+      "main": [
+        [
+          {
+            "node": "Add default settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Warsaw",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": []
+}

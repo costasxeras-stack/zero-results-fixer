@@ -1,0 +1,111 @@
+{
+  "name": "Zero Results Fixer · 99 Error alerts",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Zero Results Fixer · 99 Error alerts\nSet this as the error workflow of 01–04 (**Workflow settings > Error workflow**). When a run fails, the owner gets an email with the failed step and a link to the run.",
+        "height": 200,
+        "width": 400
+      },
+      "id": "82e52b26-2ee6-5bd4-ad2f-e6a389e0b87d",
+      "name": "About",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -460,
+        -200
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "e41b07f9-e3cd-5439-b0e8-08996243d273",
+      "name": "When a workflow fails",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "name",
+          "value": "zrf_settings"
+        },
+        "matchType": "allConditions",
+        "filters": {},
+        "limit": 1
+      },
+      "id": "62e85d9b-f9fe-5570-a2f7-bb81758ee928",
+      "name": "Load settings",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        220,
+        0
+      ],
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "fromEmail": "=Zero Results Fixer <{{ $('Load settings').first().json.from_email }}>",
+        "toEmail": "={{ $json.owner_email }}",
+        "subject": "=Zero Results Fixer failed: {{ $('When a workflow fails').item.json.workflow.name }}",
+        "emailFormat": "text",
+        "text": "=Workflow: {{ $('When a workflow fails').item.json.workflow.name }}\nFailed step: {{ $('When a workflow fails').item.json.execution.lastNodeExecuted }}\nError: {{ $('When a workflow fails').item.json.execution.error.message }}\nRun: {{ $('When a workflow fails').item.json.execution.url }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "73e58c7a-74d3-5b7f-839b-8f6c15aac46f",
+      "name": "Alert owner",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        440,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "When a workflow fails": {
+      "main": [
+        [
+          {
+            "node": "Load settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load settings": {
+      "main": [
+        [
+          {
+            "node": "Alert owner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Warsaw",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": []
+}
