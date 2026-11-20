@@ -1,6 +1,6 @@
 # Case study: fixing "No results found" searches with Claude and a human approval step
 
-Version 0.1.0 · 20 November 2026
+Version 0.1.1 · 20 November 2026
 
 ## The question
 
@@ -29,28 +29,51 @@ These come from the 19 test scenarios in [testing.md](testing.md), run in a loca
 - A wrong or reused link changes nothing, and two simultaneous submissions of one link produce only one decision. The first build failed this test (both decisions were saved), and the fix is now part of workflow 02.
 - When the search service is down, the run stops and the owner gets an email naming the failed step.
 
-## What is not measured yet
+## First live run with Claude (confirmed)
 
-The stand-in for Claude is a few simple rules. It shows that the workflow runs correctly, not that Claude's answers are good. The first live run with Claude will answer:
+On 20 November 2026 the workflow ran on n8n Cloud with the real Claude (Claude Haiku 5.5, through n8n's built-in AI credits) over all 60 searches, in two runs of 30. Every row is in [data/live-run-2026-11-20.csv](data/live-run-2026-11-20.csv).
 
-| Question | Result |
+| Result | Count |
 |---|---|
-| Of the 60 searches, how many get a rewrite that returns products? | [to fill after the first live run] |
-| How many of those rewrites would I approve? | [to fill] |
-| Which causes are most common? | [to fill] |
-| How often does Claude call something "not sold" that the shop does sell? | [to fill] |
+| Searches handled | 60 |
+| Fix proposed and tested, returns products (sent for approval) | 46 |
+| Fix proposed but still returns nothing (not sent) | 2 |
+| No fix: not sold (5) or not a product search (2) | 7 |
+| Claude returned an error or an unusable answer (sent for manual review) | 5 |
+
+Causes Claude gave: brand or collection 23, too specific 18, wording 5, not sold 5, spelling 2, not a product search 2.
+
+### Do the fixes return the right products?
+
+"Returns products" is a low bar. Search Relevance Lab has human relevance labels for these exact searches, so I scored each of the 46 fixes with nDCG@10 against the labels of the original search ([scripts/score-rewrites.mjs](../scripts/score-rewrites.mjs)). As a baseline I used the simple fix from Search Relevance Lab: keep the shopper's words but let any word match instead of all of them.
+
+| Fix | Mean nDCG@10 (46 searches) | Top-10 results with a label |
+|---|---|---|
+| Claude's rewrite (every word must match) | 0.566 | 68% |
+| Original search, any word may match | 0.642 | 83% |
+
+Claude's rewrite scored higher on 9 searches, lower on 18, and the same on 19.
+
+What I take from it:
+
+- **Confirmed:** on this catalogue, an AI rewrite per search did not beat a cheap change to the match rule. It lost more often than it won.
+- **Confirmed:** 4 approved-looking fixes scored 0, for example "star wars rug" to "rug" and "donaldson teak couch" to "teak couch" (the first results were a console table and a coffee table).
+- **Hypothesis:** part of the gap is measurement. Claude's rewrites return more products nobody labelled (68% labelled against 83%), and unlabelled results count as zero. The same bias was found for semantic search in Search Relevance Lab.
+- **Hypothesis:** Claude's confidence carries some signal. Fixes with confidence 0.7 or more averaged 0.590, fixes at 0.4 or less 0.497. With 18 and 7 searches, that is too few to rely on.
 
 ## Hypotheses
 
-- Most zero-result searches in this catalogue are brand, collection or model names, not products the shop lacks. Search Relevance Lab's own analysis points this way, but this workflow has not measured it yet.
+- Claude's causes suggest most zero-result searches in this catalogue are brand, collection or model names (23 of 55 answered) or too specific (18), not products the shop lacks (5). These are Claude's labels, not checked by hand yet.
 - "Not sold" searches are a demand signal worth sending to the buying team, the same way the Garage Quote Agent lists requests that match no price.
-- A rewrite that returns products can still return the wrong products. The owner's review is the guard for that, so the approval rate is the first number to watch.
+- A rewrite that returns products can still return the wrong products, as the live run showed. The owner's review is the guard for that, so the approval rate is the next number to watch.
+- The best design may be both: relax the match rule for every search, and use Claude only for the searches that still fail, such as spelling and not-sold.
 
 ## What I learned as a PM
 
 - Testing the AI's suggestion before a person sees it saves that person's time and makes them trust the list more.
 - "One decision per link" sounds trivial until two clicks arrive at once. Testing the race found a real bug.
 - Keeping the rules outside the search engine (an API the search reads) makes the workflow easy to adopt and easy to switch off.
+- Compare an AI feature with the cheapest non-AI fix before shipping it. Here the cheap fix won, which I would not have known from the AI output alone. Every rewrite looked reasonable when read one by one.
 
 ## Known limitations
 
@@ -60,7 +83,8 @@ The stand-in for Claude is a few simple rules. It shows that the workflow runs c
 
 ## What I would do next
 
-1. Run it live with Claude on the 60 searches and fill in the table above.
-2. Score rewrites against Search Relevance Lab's relevance labels, so "returns the right products" is measured, not just "returns products".
-3. Show the search and proposed fix on the review form itself.
-4. Group near-identical searches so one approval covers them all.
+1. Test the combined design: any-word matching for every search, Claude only for the searches that still return nothing.
+2. Ask Claude to keep the product type in every rewrite, and re-score.
+3. Label a sample of the unlabelled results by hand, to put a number on the measurement gap.
+4. Review the 46 fixes myself to get a first approval rate.
+5. Show the search and proposed fix on the review form itself.

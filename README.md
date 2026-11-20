@@ -2,7 +2,7 @@
 
 **An n8n workflow that finds shop searches with no results, has Claude explain why and propose a fix, tests the fix, and lets a person approve it before anything changes.**
 
-**Current version:** 0.1.0
+**Current version:** 0.1.1
 
 ![Weekly scan workflow in n8n](docs/screenshots/01-weekly-scan.png)
 
@@ -33,7 +33,8 @@ The demo runs against my [Search Relevance Lab](https://github.com/costasxeras-s
 ## Status
 
 - **Tested:** 19 of 19 scenarios passed in a local n8n 2.47.7, with stand-ins for Claude and email. See [docs/testing.md](docs/testing.md).
-- **Not yet measured:** how good Claude's causes and rewrites are on the 60 real searches. That is the first live run, see the [case study](docs/case-study.md).
+- **Run live:** on 20 November 2026 it ran on n8n Cloud with the real Claude over all 60 searches. 46 got a tested fix that returns products.
+- **Main finding:** scored against human relevance labels, Claude's fixes did worse than a simple non-AI fix (let the original search match any word): mean nDCG@10 0.566 against 0.642. Details and caveats in the [case study](docs/case-study.md).
 
 ## Workflows
 
@@ -58,7 +59,9 @@ I framed the problem, chose the guardrails (test before asking, a person approve
 workflows/              Six n8n workflow files to import
 docs/setup-guide.md     Step by step, about 30 minutes
 docs/testing.md         19 test scenarios and results
-docs/case-study.md      Question, approach, what is confirmed and what is not
+docs/case-study.md      Question, approach, live results, what is confirmed and what is not
+docs/data/              Every search and result from the live run (CSV)
+scripts/                Scores the live run against the relevance labels
 docs/product-brief.md   Users, goals, scope
 docs/decisions/         One record per real trade-off
 docs/screenshots/       Workflow and form screenshots
