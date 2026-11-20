@@ -1,0 +1,204 @@
+{
+  "name": "Zero Results Fixer · 04 Weekly report",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Zero Results Fixer · 04 Weekly report\nOne email with the running totals: searches found, causes, fixes approved and rejected, and the searches for products the shop may not sell (a demand signal).",
+        "height": 200,
+        "width": 400
+      },
+      "id": "da8cf026-01a0-5c30-9055-694c417e163a",
+      "name": "About",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -460,
+        -220
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtDay": [
+                1
+              ],
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "id": "05e21ca1-9aa8-53bc-a69c-135e986c15ee",
+      "name": "Every Monday 08:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        -80
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "a874ed25-2447-5a0b-b9b6-78f7c4a97a87",
+      "name": "Run now",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "name",
+          "value": "zrf_settings"
+        },
+        "matchType": "allConditions",
+        "filters": {},
+        "limit": 1
+      },
+      "id": "6aabc7d9-fec0-5ff0-9612-7d9d417073ff",
+      "name": "Load settings",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        220,
+        0
+      ],
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "name",
+          "value": "zrf_proposals"
+        },
+        "matchType": "allConditions",
+        "filters": {},
+        "returnAll": true
+      },
+      "id": "b27771dc-c3a6-53da-b6f7-99a7bdffdbb9",
+      "name": "Load proposals",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        440,
+        0
+      ],
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const s = $('Load settings').first().json;\nconst P = $input.all().map(i => i.json).filter(p => p.proposal_id);\nconst by = (k) => P.reduce((m, p) => (m[p[k]] = (m[p[k]] || 0) + 1, m), {});\nconst st = by('status'), ca = by('cause');\nconst decided = (st.approved || 0) + (st.rejected || 0);\nconst L = [];\nL.push(`Zero-result searches found so far: ${P.length}`, '');\nL.push('By cause:'); Object.entries(ca).sort((a, b) => b[1] - a[1]).forEach(([k, v]) => L.push(`- ${k.replace(/_/g, ' ')}: ${v}`)); L.push('');\nL.push('By status:'); Object.entries(st).sort((a, b) => b[1] - a[1]).forEach(([k, v]) => L.push(`- ${k.replace(/_/g, ' ')}: ${v}`)); L.push('');\nif (decided) L.push(`Approval rate: ${Math.round((st.approved || 0) / decided * 100)}% of ${decided} decided fixes.`, '');\nconst demand = P.filter(p => p.cause === 'not_sold').map(p => p.query);\nif (demand.length) { L.push('Searches for things the shop may not sell:'); demand.forEach(q => L.push(`- ${q}`)); }\nreturn [{ json: { to: s.owner_email, subject: `Zero Results Fixer report: ${st.pending || 0} waiting, ${st.approved || 0} live`, text: L.join('\\n') } }];"
+      },
+      "id": "3d473e17-f808-52c4-ab9b-7127f16f631c",
+      "name": "Build report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "=Zero Results Fixer <{{ $('Load settings').first().json.from_email }}>",
+        "toEmail": "={{ $json.to }}",
+        "subject": "={{ $json.subject }}",
+        "emailFormat": "text",
+        "text": "={{ $json.text }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "a37adc05-59ea-5c12-85e2-41dffe72fee4",
+      "name": "Email the report",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        880,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Every Monday 08:00": {
+      "main": [
+        [
+          {
+            "node": "Load settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run now": {
+      "main": [
+        [
+          {
+            "node": "Load settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load settings": {
+      "main": [
+        [
+          {
+            "node": "Load proposals",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load proposals": {
+      "main": [
+        [
+          {
+            "node": "Build report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build report": {
+      "main": [
+        [
+          {
+            "node": "Email the report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Warsaw",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": []
+}
