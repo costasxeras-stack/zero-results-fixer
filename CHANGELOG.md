@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.2.0] (22 November 2026)
+
+### Changed
+- Every Code node is replaced with n8n's own nodes: Filter, Edit Fields, Compare Datasets, Remove Duplicates, Limit, Merge, Sort, Aggregate, Summarize and If. Each rule can now be read on the canvas without opening JavaScript (decision 0006).
+- Workflow 01 is grouped into three stages: find new zero-result searches, ask Claude and test the fix, email the owner.
+- The review form (02) checks a link in three visible steps (link valid, still pending, own rewrite filled in) and shows one message per problem.
+- The owner email lists fixes to approve first, highest confidence first, then fixes that still found nothing, demand signals and searches to check by hand. Each line starts with a short label.
+
+### Removed
+- The "Anything new?" check in workflow 01. It could never be false, because nothing after "Limit to max per run" runs when there are no new searches.
+
+### Upgrade
+- Re-import workflows 01, 02, 03 and 04. Data tables and settings do not change.
+
 ## [0.1.1] (20 November 2026)
 
 ### Added

@@ -1,3 +1,25 @@
+# Testing: v0.2.0
+
+**How:** the four changed workflows were updated in my n8n Cloud account and run there with test data pinned on the steps that call outside services (the search service, Claude, data table writes and email). Every n8n step in between ran for real. Date: 22 November 2026.
+
+## Results: 9 of 9 scenarios passed
+
+| # | Scenario | Expected | Result |
+|---|---|---|---|
+| V1 | Weekly scan with a mix of searches: one from the train split, one empty, one that finds products, one repeated, one seen before | Only the 4 new zero-result test searches reach Claude, each once | Pass |
+| V2 | Same run, 4 different Claude outcomes | Statuses `pending`, `needs_review` (Claude error), `no_fix` (not a product search) and `fix_failed_test`. Confidence above 1 is capped at 1. The rewrite is trimmed and lower case | Pass |
+| V3 | Same run | One email, fix to approve first with its review link, then the other three | Pass |
+| V4 | First ever run, no past proposals | The new search is not skipped | Pass |
+| V5 | Review: own rewrite typed with spaces and capitals | Saved as "bunk bed", rule added, "Approved" message | Pass |
+| V6 | Review: wrong token | "This link is not valid". Nothing saved | Pass |
+| V7 | Review: already approved | "Already decided (approved)". Nothing saved | Pass |
+| V8 | Review: "own rewrite" left empty | Asked to type it. Nothing saved | Pass |
+| V9 | Review: the save finds no pending row (second click at the same moment) | "Decided a moment ago". No rule added | Pass |
+
+Also checked: the weekly report counts causes and statuses, the approval rate (67% of 3 in the test) and the "may not sell" list. The live rules API answered `{"count":0,"rules":[]}` after the update, which is right with no approvals yet.
+
+**Not covered by v0.2.0 tests:** real Claude answers (the v0.1.1 live run covers those), real email delivery and a scheduled Monday run.
+
 # Testing: v0.1.1
 
 **How:** the six workflow files were imported into a local n8n **2.47.7** and published. Search Relevance Lab v0.1.0 ran locally, so every search was real. Claude and email (SMTP) were replaced by local stand-ins that record every request. A test-only webhook was added to the workflows that normally start by hand or on a schedule, so they could be started from a script. Those webhooks are not in the files in this repo. Date: 20 November 2026.
