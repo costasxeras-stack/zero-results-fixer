@@ -100,19 +100,6 @@
     },
     {
       "parameters": {
-        "jsCode": "const s = $('Load settings').first().json;\nconst P = $input.all().map(i => i.json).filter(p => p.proposal_id);\nconst by = (k) => P.reduce((m, p) => (m[p[k]] = (m[p[k]] || 0) + 1, m), {});\nconst st = by('status'), ca = by('cause');\nconst decided = (st.approved || 0) + (st.rejected || 0);\nconst L = [];\nL.push(`Zero-result searches found so far: ${P.length}`, '');\nL.push('By cause:'); Object.entries(ca).sort((a, b) => b[1] - a[1]).forEach(([k, v]) => L.push(`- ${k.replace(/_/g, ' ')}: ${v}`)); L.push('');\nL.push('By status:'); Object.entries(st).sort((a, b) => b[1] - a[1]).forEach(([k, v]) => L.push(`- ${k.replace(/_/g, ' ')}: ${v}`)); L.push('');\nif (decided) L.push(`Approval rate: ${Math.round((st.approved || 0) / decided * 100)}% of ${decided} decided fixes.`, '');\nconst demand = P.filter(p => p.cause === 'not_sold').map(p => p.query);\nif (demand.length) { L.push('Searches for things the shop may not sell:'); demand.forEach(q => L.push(`- ${q}`)); }\nreturn [{ json: { to: s.owner_email, subject: `Zero Results Fixer report: ${st.pending || 0} waiting, ${st.approved || 0} live`, text: L.join('\\n') } }];"
-      },
-      "id": "3d473e17-f808-52c4-ab9b-7127f16f631c",
-      "name": "Build report",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        660,
-        0
-      ]
-    },
-    {
-      "parameters": {
         "fromEmail": "=Zero Results Fixer <{{ $('Load settings').first().json.from_email }}>",
         "toEmail": "={{ $json.to }}",
         "subject": "={{ $json.subject }}",
@@ -127,9 +114,266 @@
       "type": "n8n-nodes-base.emailSend",
       "typeVersion": 2.1,
       "position": [
-        880,
+        2200,
         0
       ]
+    },
+    {
+      "name": "Real rows",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        660,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "rr1",
+              "leftValue": "={{ $json.proposal_id ?? '' }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "3f16fffd-fae3-4d79-be49-fe15368bc737"
+    },
+    {
+      "name": "Count by cause",
+      "type": "n8n-nodes-base.summarize",
+      "typeVersion": 1.1,
+      "position": [
+        880,
+        -100
+      ],
+      "parameters": {
+        "fieldsToSummarize": {
+          "values": [
+            {
+              "aggregation": "count",
+              "field": "proposal_id"
+            },
+            {
+              "aggregation": "append",
+              "field": "query"
+            }
+          ]
+        },
+        "fieldsToSplitBy": "cause",
+        "options": {}
+      },
+      "id": "5a502525-2a8e-4306-a123-f8755285ba42"
+    },
+    {
+      "name": "Most common cause first",
+      "type": "n8n-nodes-base.sort",
+      "typeVersion": 1,
+      "position": [
+        1100,
+        -100
+      ],
+      "parameters": {
+        "type": "simple",
+        "sortFieldsUi": {
+          "sortField": [
+            {
+              "fieldName": "count_proposal_id",
+              "order": "descending"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "69d15595-dc6f-4f69-b17b-09d2078d8a84"
+    },
+    {
+      "name": "Collect causes",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1320,
+        -100
+      ],
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "causes",
+        "options": {}
+      },
+      "id": "302fcc8d-52e1-4810-928c-cb967e4071e4"
+    },
+    {
+      "name": "Count by status",
+      "type": "n8n-nodes-base.summarize",
+      "typeVersion": 1.1,
+      "position": [
+        880,
+        100
+      ],
+      "parameters": {
+        "fieldsToSummarize": {
+          "values": [
+            {
+              "aggregation": "count",
+              "field": "proposal_id"
+            }
+          ]
+        },
+        "fieldsToSplitBy": "status",
+        "options": {}
+      },
+      "id": "1844259e-032d-4190-8a98-0bce47e880d3"
+    },
+    {
+      "name": "Most common status first",
+      "type": "n8n-nodes-base.sort",
+      "typeVersion": 1,
+      "position": [
+        1100,
+        100
+      ],
+      "parameters": {
+        "type": "simple",
+        "sortFieldsUi": {
+          "sortField": [
+            {
+              "fieldName": "count_proposal_id",
+              "order": "descending"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3923b7dc-ab0e-4ca0-b353-58d0f2bc8534"
+    },
+    {
+      "name": "Collect statuses",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1320,
+        100
+      ],
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "statuses",
+        "options": {}
+      },
+      "id": "a8ac0cf9-564d-4d1a-84a2-0b5256b0217c"
+    },
+    {
+      "name": "Causes + statuses",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1540,
+        0
+      ],
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "id": "89292fa4-1137-4b42-9342-05b4f120ed8d"
+    },
+    {
+      "name": "Read totals",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1760,
+        0
+      ],
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": true,
+        "include": "all",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "t1",
+              "name": "total",
+              "value": "={{ $('Real rows').all().length }}",
+              "type": "number"
+            },
+            {
+              "id": "t2",
+              "name": "approved",
+              "value": "={{ $json.statuses.find(s => s.status === 'approved')?.count_proposal_id ?? 0 }}",
+              "type": "number"
+            },
+            {
+              "id": "t3",
+              "name": "rejected",
+              "value": "={{ $json.statuses.find(s => s.status === 'rejected')?.count_proposal_id ?? 0 }}",
+              "type": "number"
+            },
+            {
+              "id": "t4",
+              "name": "pending",
+              "value": "={{ $json.statuses.find(s => s.status === 'pending')?.count_proposal_id ?? 0 }}",
+              "type": "number"
+            },
+            {
+              "id": "t5",
+              "name": "not_sold",
+              "value": "={{ $json.causes.find(c => c.cause === 'not_sold')?.appended_query ?? [] }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b13c1884-6092-4a62-a49f-7e791cb2da2c"
+    },
+    {
+      "name": "Build report",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1980,
+        0
+      ],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b1",
+              "name": "to",
+              "value": "={{ $('Load settings').first().json.owner_email }}",
+              "type": "string"
+            },
+            {
+              "id": "b2",
+              "name": "subject",
+              "value": "=Zero Results Fixer report: {{ $json.pending }} waiting, {{ $json.approved }} live",
+              "type": "string"
+            },
+            {
+              "id": "b3",
+              "name": "text",
+              "value": "=Zero-result searches found so far: {{ $json.total }}\n\nBy cause:\n{{ $json.causes.map(c => `- ${String(c.cause).replaceAll('_', ' ')}: ${c.count_proposal_id}`).join('\\n') }}\n\nBy status:\n{{ $json.statuses.map(s => `- ${String(s.status).replaceAll('_', ' ')}: ${s.count_proposal_id}`).join('\\n') }}\n\n{{ $json.approved + $json.rejected > 0 ? `Approval rate: ${Math.round($json.approved / ($json.approved + $json.rejected) * 100)}% of ${$json.approved + $json.rejected} decided fixes.` : 'No fixes decided yet.' }}\n\n{{ $json.not_sold.length ? 'Searches for things the shop may not sell:\\n' + $json.not_sold.map(q => `- ${q}`).join('\\n') : '' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "570b904b-f983-41e2-af6d-60e87f50cc15"
     }
   ],
   "connections": {
@@ -167,6 +411,110 @@
       ]
     },
     "Load proposals": {
+      "main": [
+        [
+          {
+            "node": "Real rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Real rows": {
+      "main": [
+        [
+          {
+            "node": "Count by cause",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Count by status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Count by cause": {
+      "main": [
+        [
+          {
+            "node": "Most common cause first",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Most common cause first": {
+      "main": [
+        [
+          {
+            "node": "Collect causes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Collect causes": {
+      "main": [
+        [
+          {
+            "node": "Causes + statuses",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Count by status": {
+      "main": [
+        [
+          {
+            "node": "Most common status first",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Most common status first": {
+      "main": [
+        [
+          {
+            "node": "Collect statuses",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Collect statuses": {
+      "main": [
+        [
+          {
+            "node": "Causes + statuses",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Causes + statuses": {
+      "main": [
+        [
+          {
+            "node": "Read totals",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read totals": {
       "main": [
         [
           {

@@ -111,52 +111,6 @@
     },
     {
       "parameters": {
-        "jsCode": "const f = $('Review form').first().json;\nconst p = $input.first().json;\nconst out = { proposal_id: f.proposal_id || '', ok: false, message: '' };\nif (!p.proposal_id || p.token !== f.token) { out.message = 'This link is not valid. Use the link from the latest weekly email.'; return [{ json: out }]; }\nif (p.status !== 'pending') { out.message = `This fix was already decided (${p.status}). Nothing changed.`; return [{ json: out }]; }\nconst d = f.decision || '';\nconst own = String(f.my_rewrite || '').trim().toLowerCase();\nif (d.startsWith('Approve with') && !own) { out.message = 'You chose your own rewrite but left it empty. Open the link again and type it.'; return [{ json: out }]; }\nout.ok = true;\nout.approved = d.startsWith('Approve');\nout.status = out.approved ? 'approved' : 'rejected';\nout.final_rewrite = out.approved ? (own && d.startsWith('Approve with') ? own : p.rewrite) : '';\nout.query = p.query; out.cause = p.cause;\nout.note = String(f.note || '').slice(0, 500);\nout.message = out.approved ? `Approved. Searches for \"${p.query}\" will now use \"${out.final_rewrite}\".` : `Rejected. \"${p.query}\" stays as it is.`;\nreturn [{ json: out }];"
-      },
-      "id": "f29b6377-4393-50c3-ac5f-753745e4eb5b",
-      "name": "Check link and decision",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        440,
-        0
-      ]
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "loose",
-            "version": 2
-          },
-          "conditions": [
-            {
-              "id": "86100919-61d1-5b4e-88cb-05ad139d943d",
-              "leftValue": "={{ $json.ok }}",
-              "operator": {
-                "type": "boolean",
-                "operation": "true",
-                "singleValue": true
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "id": "d28a78f5-1259-567f-92d9-e46de8bb14f2",
-      "name": "Valid?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        660,
-        0
-      ]
-    },
-    {
-      "parameters": {
         "resource": "row",
         "operation": "update",
         "dataTableId": {
@@ -338,23 +292,10 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        880,
-        -100
+        1540,
+        -300
       ],
       "alwaysOutputData": true
-    },
-    {
-      "parameters": {
-        "jsCode": "const saved = $input.all().some(i => i.json.proposal_id);\nconst c = $('Check link and decision').first().json;\nreturn [{ json: { ...c, saved, message: saved ? c.message : 'This fix was already decided a moment ago. Nothing changed.' } }];"
-      },
-      "id": "3d305b2f-7a2f-5601-a3bf-fb8ba2404408",
-      "name": "Did it save?",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        1100,
-        -100
-      ]
     },
     {
       "parameters": {
@@ -362,16 +303,17 @@
           "options": {
             "caseSensitive": true,
             "leftValue": "",
-            "typeValidation": "loose",
+            "typeValidation": "strict",
             "version": 2
           },
           "conditions": [
             {
-              "id": "e0b20c8b-355c-5927-a92b-ece1806099da",
-              "leftValue": "={{ $json.saved }}",
+              "id": "sv1",
+              "leftValue": "={{ $json.proposal_id ?? '' }}",
+              "rightValue": "",
               "operator": {
-                "type": "boolean",
-                "operation": "true",
+                "type": "string",
+                "operation": "notEmpty",
                 "singleValue": true
               }
             }
@@ -385,8 +327,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        1320,
-        -100
+        1760,
+        -300
       ]
     },
     {
@@ -395,13 +337,14 @@
           "options": {
             "caseSensitive": true,
             "leftValue": "",
-            "typeValidation": "loose",
+            "typeValidation": "strict",
             "version": 2
           },
           "conditions": [
             {
-              "id": "f9c10782-cb2a-546f-8989-f737acd6b2d2",
-              "leftValue": "={{ $json.approved }}",
+              "id": "ap1",
+              "leftValue": "={{ $('Write the result message').first().json.approved }}",
+              "rightValue": "",
               "operator": {
                 "type": "boolean",
                 "operation": "true",
@@ -418,8 +361,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        1540,
-        -160
+        1980,
+        -400
       ]
     },
     {
@@ -434,10 +377,10 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "from_query": "={{ $('Check link and decision').item.json.query.toLowerCase() }}",
-            "to_query": "={{ $('Check link and decision').item.json.final_rewrite }}",
-            "cause": "={{ $('Check link and decision').item.json.cause }}",
-            "proposal_id": "={{ $('Check link and decision').item.json.proposal_id }}",
+            "from_query": "={{ $('Write the result message').first().json.query.toLowerCase() }}",
+            "to_query": "={{ $('Write the result message').first().json.final_rewrite }}",
+            "cause": "={{ $('Write the result message').first().json.cause }}",
+            "proposal_id": "={{ $('Write the result message').first().json.proposal_id }}",
             "approved_at": "={{ $now.toISO() }}",
             "active": "={{ true }}"
           },
@@ -512,15 +455,15 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        1760,
-        -240
+        2200,
+        -500
       ]
     },
     {
       "parameters": {
         "operation": "completion",
         "completionTitle": "Saved",
-        "completionMessage": "={{ $('Did it save?').first().json.message }}",
+        "completionMessage": "={{ $('Write the result message').first().json.message }}",
         "options": {}
       },
       "id": "d84c3f3a-7f4b-5d85-a21c-cb438bfc499b",
@@ -528,8 +471,8 @@
       "type": "n8n-nodes-base.form",
       "typeVersion": 1,
       "position": [
-        1980,
-        -160
+        2420,
+        -400
       ]
     },
     {
@@ -544,9 +487,310 @@
       "type": "n8n-nodes-base.form",
       "typeVersion": 1,
       "position": [
-        1540,
-        120
+        2420,
+        100
       ]
+    },
+    {
+      "name": "Link valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "lv1",
+              "leftValue": "={{ $json.proposal_id ?? '' }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "lv2",
+              "leftValue": "={{ $json.token ?? '' }}",
+              "rightValue": "={{ $('Review form').first().json.token ?? '' }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "93efce0c-df4d-4df2-a992-224f16294a41"
+    },
+    {
+      "name": "Still pending?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        660,
+        -100
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "sp1",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "pending",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "674cb7f1-fe33-4e42-aa7c-c3f5a100819b"
+    },
+    {
+      "name": "Own rewrite missing?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        880,
+        -200
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "om1",
+              "leftValue": "={{ $('Review form').first().json.decision }}",
+              "rightValue": "Approve with my own rewrite",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "om2",
+              "leftValue": "={{ String($('Review form').first().json.my_rewrite ?? '').trim() }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "badc41f9-80c6-483a-80f1-9543776ef465"
+    },
+    {
+      "name": "Prepare decision",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1100,
+        -300
+      ],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "pd1",
+              "name": "proposal_id",
+              "value": "={{ $json.proposal_id }}",
+              "type": "string"
+            },
+            {
+              "id": "pd2",
+              "name": "query",
+              "value": "={{ $json.query }}",
+              "type": "string"
+            },
+            {
+              "id": "pd3",
+              "name": "cause",
+              "value": "={{ $json.cause }}",
+              "type": "string"
+            },
+            {
+              "id": "pd4",
+              "name": "approved",
+              "value": "={{ $('Review form').first().json.decision.startsWith('Approve') }}",
+              "type": "boolean"
+            },
+            {
+              "id": "pd5",
+              "name": "status",
+              "value": "={{ $('Review form').first().json.decision.startsWith('Approve') ? 'approved' : 'rejected' }}",
+              "type": "string"
+            },
+            {
+              "id": "pd6",
+              "name": "final_rewrite",
+              "value": "={{ !$('Review form').first().json.decision.startsWith('Approve') ? '' : $('Review form').first().json.decision === 'Approve with my own rewrite' ? String($('Review form').first().json.my_rewrite).trim().toLowerCase() : $json.rewrite }}",
+              "type": "string"
+            },
+            {
+              "id": "pd7",
+              "name": "note",
+              "value": "={{ String($('Review form').first().json.note ?? '').slice(0, 500) }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c043bbe5-4fc1-43e3-881d-81c99432f4ba"
+    },
+    {
+      "name": "Write the result message",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1320,
+        -300
+      ],
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": true,
+        "include": "all",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "wm1",
+              "name": "message",
+              "value": "={{ $json.approved ? `Approved. Searches for \"${$json.query}\" will now use \"${$json.final_rewrite}\".` : `Rejected. \"${$json.query}\" stays as it is.` }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c4fab514-9db1-41db-9acd-d7e8a4000031"
+    },
+    {
+      "name": "Message: link not valid",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1320,
+        200
+      ],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "m1",
+              "name": "message",
+              "value": "This link is not valid. Use the link from the latest weekly email.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "75f7305b-4c9d-4d0e-941e-4bc44d6210e1"
+    },
+    {
+      "name": "Message: already decided",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1320,
+        100
+      ],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "m2",
+              "name": "message",
+              "value": "=This fix was already decided ({{ $json.status }}). Nothing changed.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "996a660d-8b5b-427c-a604-6462cdae8e77"
+    },
+    {
+      "name": "Message: rewrite missing",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1320,
+        0
+      ],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "m3",
+              "name": "message",
+              "value": "You chose your own rewrite but left it empty. Open the link again and type it.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "856243ac-f30e-46be-bb48-d0cb9bb770ec"
+    },
+    {
+      "name": "Message: decided a moment ago",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1980,
+        -100
+      ],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "m4",
+              "name": "message",
+              "value": "This fix was already decided a moment ago. Nothing changed.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "18222316-1888-41ab-bf68-57ab8dbd252e"
     }
   ],
   "connections": {
@@ -565,36 +809,7 @@
       "main": [
         [
           {
-            "node": "Check link and decision",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Check link and decision": {
-      "main": [
-        [
-          {
-            "node": "Valid?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Valid?": {
-      "main": [
-        [
-          {
-            "node": "Save decision",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Show problem",
+            "node": "Link valid?",
             "type": "main",
             "index": 0
           }
@@ -602,17 +817,6 @@
       ]
     },
     "Save decision": {
-      "main": [
-        [
-          {
-            "node": "Did it save?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Did it save?": {
       "main": [
         [
           {
@@ -634,7 +838,7 @@
         ],
         [
           {
-            "node": "Show problem",
+            "node": "Message: decided a moment ago",
             "type": "main",
             "index": 0
           }
@@ -664,6 +868,126 @@
         [
           {
             "node": "Show result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Link valid?": {
+      "main": [
+        [
+          {
+            "node": "Still pending?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Message: link not valid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Still pending?": {
+      "main": [
+        [
+          {
+            "node": "Own rewrite missing?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Message: already decided",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Own rewrite missing?": {
+      "main": [
+        [
+          {
+            "node": "Message: rewrite missing",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare decision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare decision": {
+      "main": [
+        [
+          {
+            "node": "Write the result message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write the result message": {
+      "main": [
+        [
+          {
+            "node": "Save decision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message: link not valid": {
+      "main": [
+        [
+          {
+            "node": "Show problem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message: already decided": {
+      "main": [
+        [
+          {
+            "node": "Show problem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message: rewrite missing": {
+      "main": [
+        [
+          {
+            "node": "Show problem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message: decided a moment ago": {
+      "main": [
+        [
+          {
+            "node": "Show problem",
             "type": "main",
             "index": 0
           }

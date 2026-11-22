@@ -102,26 +102,13 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        260,
+        220,
         0
       ],
       "executeOnce": true,
       "retryOnFail": true,
       "maxTries": 5,
       "waitBetweenTries": 5000
-    },
-    {
-      "parameters": {
-        "jsCode": "// The demo source returns [{q, split, labels}]. Only the held-out test split is checked,\n// so results can be compared with Search Relevance Lab's scorecard.\nconst rows = $input.all().map(i => i.json);\nconst list = rows.length === 1 && Array.isArray(rows[0]) ? rows[0] : rows;\nreturn list\n  .filter(r => !r.split || r.split === 'test')\n  .map(r => ({ json: { query: String(r.q ?? r.query ?? '').trim() } }))\n  .filter(i => i.json.query);"
-      },
-      "id": "9f4620f4-d644-56c0-845e-8fbfb1c5505e",
-      "name": "Keep test searches",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        520,
-        0
-      ]
     },
     {
       "parameters": {
@@ -146,26 +133,13 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        780,
+        880,
         0
       ],
       "onError": "continueRegularOutput",
       "retryOnFail": true,
       "maxTries": 2,
       "waitBetweenTries": 3000
-    },
-    {
-      "parameters": {
-        "jsCode": "const out = [];\nconst searches = $('Keep test searches').all();\n$input.all().forEach((item, i) => {\n  const kw = item.json.keyword || {};\n  if (kw.total === 0) out.push({ json: { query: searches[i].json.query } });\n});\nreturn out;"
-      },
-      "id": "4ecc7f15-4855-54ac-8198-7d0f387d6cf4",
-      "name": "Keep zero-result searches",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        1040,
-        0
-      ]
     },
     {
       "parameters": {
@@ -185,24 +159,11 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        1300,
-        0
+        1320,
+        180
       ],
       "alwaysOutputData": true,
       "executeOnce": true
-    },
-    {
-      "parameters": {
-        "jsCode": "const seen = new Set($input.all().map(i => (i.json.query || '').toLowerCase()).filter(Boolean));\nconst max = Number($('Load settings').first().json.max_queries_per_run) || 30;\nconst fresh = $('Keep zero-result searches').all()\n  .map(i => i.json.query)\n  .filter((q, idx, arr) => !seen.has(q.toLowerCase()) && arr.indexOf(q) === idx)\n  .slice(0, max);\nreturn fresh.map(q => ({ json: { query: q } }));"
-      },
-      "id": "1246beaa-8c62-53fa-ae28-5f671e8c78e6",
-      "name": "Skip searches seen before",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        1560,
-        0
-      ]
     },
     {
       "parameters": {
@@ -249,19 +210,6 @@
     },
     {
       "parameters": {
-        "jsCode": "const queries = $('Skip searches seen before').all();\nreturn $input.all().map((item, i) => {\n  const o = item.json.output || {};\n  const q = queries[i].json.query;\n  const rewrite = String(o.rewrite || '').trim().toLowerCase();\n  const ok = !item.json.error && o.cause;\n  return { json: {\n    proposal_id: 'zr_' + $now.toFormat('yyyyLLdd') + '_' + Math.random().toString(36).slice(2, 8),\n    token: Math.random().toString(36).slice(2, 12),\n    query: q,\n    found_at: $now.toISO(),\n    cause: ok ? o.cause : 'ai_failed',\n    rewrite: ok && rewrite !== q.toLowerCase() ? rewrite : '',\n    ai_confidence: ok ? Math.max(0, Math.min(1, Number(o.confidence) || 0)) : 0,\n    ai_reason: ok ? String(o.reason || '').slice(0, 300) : 'Claude returned an error or an answer in the wrong format. Check this search by hand.',\n  } };\n});"
-      },
-      "id": "3de702b7-612d-5e5f-b5c9-e54d57cd4f94",
-      "name": "Shape proposal",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        300,
-        380
-      ]
-    },
-    {
-      "parameters": {
         "url": "={{ $('Load settings').first().json.search_api_url }}/api/search?q={{ encodeURIComponent($json.rewrite || $json.query) }}",
         "options": {
           "batching": {
@@ -283,26 +231,13 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        560,
+        700,
         380
       ],
       "onError": "continueRegularOutput",
       "retryOnFail": true,
       "maxTries": 3,
       "waitBetweenTries": 3000
-    },
-    {
-      "parameters": {
-        "jsCode": "const props = $('Shape proposal').all();\nreturn $input.all().map((item, i) => {\n  const p = { ...props[i].json };\n  const kw = item.json.keyword || {};\n  p.results_after = p.rewrite ? (kw.total ?? 0) : 0;\n  p.top_results = p.rewrite ? (kw.results || []).slice(0, 3).map(r => r.name).join(' | ').slice(0, 600) : '';\n  if (p.cause === 'ai_failed') p.status = 'needs_review';\n  else if (p.cause === 'not_sold' || p.cause === 'not_a_product_search' || !p.rewrite) p.status = 'no_fix';\n  else if (p.results_after === 0) p.status = 'fix_failed_test';\n  else p.status = 'pending';\n  return { json: p };\n});"
-      },
-      "id": "cda4e095-ff61-58c1-8ded-e45dc9f742e7",
-      "name": "Decide status",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        820,
-        380
-      ]
     },
     {
       "parameters": {
@@ -479,55 +414,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        1080,
-        380
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "const s = $('Load settings').first().json;\nconst all = $('Decide status').all().map(i => i.json);\nconst pending = all.filter(p => p.status === 'pending').sort((a, b) => b.ai_confidence - a.ai_confidence);\nconst failed = all.filter(p => p.status === 'fix_failed_test');\nconst nofix = all.filter(p => p.status === 'no_fix');\nconst review = all.filter(p => p.status === 'needs_review');\nconst link = p => `${s.review_form_url}?proposal_id=${encodeURIComponent(p.proposal_id)}&token=${p.token}`;\nconst L = [];\nL.push(`This week ${all.length} new searches returned no products.`);\nL.push(`${pending.length} have a tested fix waiting for you. Nothing changes until you approve.`, '');\npending.forEach((p, n) => {\n  L.push(`${n + 1}. \"${p.query}\"`);\n  L.push(`   Cause: ${p.cause.replace(/_/g, ' ')}. Claude's confidence ${p.ai_confidence.toFixed(2)}.`);\n  L.push(`   Fix: search \"${p.rewrite}\" instead. It now finds ${p.results_after} products, for example: ${p.top_results.split(' | ')[0] || ''}`);\n  L.push(`   Why: ${p.ai_reason}`);\n  L.push(`   Approve or reject: ${link(p)}`, '');\n});\nif (failed.length) { L.push(`Fixes that still found nothing (${failed.length}), not sent for approval:`); failed.forEach(p => L.push(`- \"${p.query}\" tried \"${p.rewrite}\"`)); L.push(''); }\nif (nofix.length) { L.push(`Probably not sold or not a product search (${nofix.length}). Worth a look as demand signals:`); nofix.forEach(p => L.push(`- \"${p.query}\" (${p.cause.replace(/_/g, ' ')})`)); L.push(''); }\nif (review.length) { L.push(`Claude could not read these (${review.length}). Check by hand:`); review.forEach(p => L.push(`- \"${p.query}\"`)); }\nreturn [{ json: { to: s.owner_email, subject: `Zero results this week: ${pending.length} fixes to approve`, text: L.join('\\n'), count: all.length } }];"
-      },
-      "id": "e0dca432-0fc1-5158-a0f8-8b9617be254a",
-      "name": "Build owner email",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        1340,
-        380
-      ],
-      "executeOnce": true
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "loose",
-            "version": 2
-          },
-          "conditions": [
-            {
-              "id": "771255ad-6eb9-52fa-aca3-a6cefb47e685",
-              "leftValue": "={{ $json.count }}",
-              "rightValue": 0,
-              "operator": {
-                "type": "number",
-                "operation": "gt"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "id": "aed5003e-2135-5a80-907b-be59253ad483",
-      "name": "Anything new?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        1600,
-        380
+        1580,
+        300
       ]
     },
     {
@@ -546,9 +434,488 @@
       "type": "n8n-nodes-base.emailSend",
       "typeVersion": 2.1,
       "position": [
-        1860,
-        300
+        880,
+        860
       ]
+    },
+    {
+      "name": "Clean search text",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cs1",
+              "name": "query",
+              "value": "={{ String($json.q ?? $json.query ?? '').trim() }}",
+              "type": "string"
+            },
+            {
+              "id": "cs2",
+              "name": "split",
+              "value": "={{ $json.split ?? '' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "59a79f6d-9f5b-4e29-a32e-f3d6e4a08061"
+    },
+    {
+      "name": "Keep test searches",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        660,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "kt1",
+              "leftValue": "={{ $json.query }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "kt2",
+              "leftValue": "={{ $json.split || 'test' }}",
+              "rightValue": "test",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "06a5d2a9-f43c-42e9-8765-37fa06e191e9"
+    },
+    {
+      "name": "Keep zero-result searches",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        1100,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "kz1",
+              "leftValue": "={{ $json.keyword?.total ?? -1 }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "06d4e586-c37c-4114-ba21-c78b37a2fde9"
+    },
+    {
+      "name": "Skip searches seen before",
+      "type": "n8n-nodes-base.compareDatasets",
+      "typeVersion": 2.3,
+      "position": [
+        1540,
+        0
+      ],
+      "parameters": {
+        "mergeByFields": {
+          "values": [
+            {
+              "field1": "query",
+              "field2": "query"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "64390549-41c7-4f60-8420-fa62ccf03b85"
+    },
+    {
+      "name": "Remove repeats",
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        1760,
+        0
+      ],
+      "parameters": {
+        "operation": "removeDuplicateInputItems",
+        "compare": "selectedFields",
+        "fieldsToCompare": "query",
+        "options": {}
+      },
+      "id": "0a5ed2dc-3424-4a26-891c-5efffa52f07e"
+    },
+    {
+      "name": "Limit to max per run",
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        1980,
+        0
+      ],
+      "parameters": {
+        "maxItems": "={{ Number($('Load settings').first().json.max_queries_per_run) || 30 }}"
+      },
+      "id": "1fab99d9-e09e-4438-9cdb-b02ad287320f"
+    },
+    {
+      "name": "Read Claude's answer",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        260,
+        380
+      ],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "rc1",
+              "name": "query",
+              "value": "={{ $('Limit to max per run').item.json.query }}",
+              "type": "string"
+            },
+            {
+              "id": "rc2",
+              "name": "ai_ok",
+              "value": "={{ !$json.error && !!$json.output?.cause }}",
+              "type": "boolean"
+            },
+            {
+              "id": "rc3",
+              "name": "cause",
+              "value": "={{ $json.output?.cause ?? '' }}",
+              "type": "string"
+            },
+            {
+              "id": "rc4",
+              "name": "rewrite",
+              "value": "={{ String($json.output?.rewrite ?? '').trim().toLowerCase() }}",
+              "type": "string"
+            },
+            {
+              "id": "rc5",
+              "name": "confidence",
+              "value": "={{ Number($json.output?.confidence) || 0 }}",
+              "type": "number"
+            },
+            {
+              "id": "rc6",
+              "name": "reason",
+              "value": "={{ String($json.output?.reason ?? '') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "460a6471-5e08-4a9b-b0ec-e78b915b7b11"
+    },
+    {
+      "name": "Shape proposal",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        480,
+        380
+      ],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "sp1",
+              "name": "proposal_id",
+              "value": "=zr_{{ $now.toFormat('yyyyLLdd') }}_{{ Math.random().toString(36).slice(2, 8) }}",
+              "type": "string"
+            },
+            {
+              "id": "sp2",
+              "name": "token",
+              "value": "={{ Math.random().toString(36).slice(2, 12) }}",
+              "type": "string"
+            },
+            {
+              "id": "sp3",
+              "name": "query",
+              "value": "={{ $json.query }}",
+              "type": "string"
+            },
+            {
+              "id": "sp4",
+              "name": "found_at",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            },
+            {
+              "id": "sp5",
+              "name": "cause",
+              "value": "={{ $json.ai_ok ? $json.cause : 'ai_failed' }}",
+              "type": "string"
+            },
+            {
+              "id": "sp6",
+              "name": "rewrite",
+              "value": "={{ $json.ai_ok && $json.rewrite !== $json.query.toLowerCase() ? $json.rewrite : '' }}",
+              "type": "string"
+            },
+            {
+              "id": "sp7",
+              "name": "ai_confidence",
+              "value": "={{ $json.ai_ok ? Math.max(0, Math.min(1, $json.confidence)) : 0 }}",
+              "type": "number"
+            },
+            {
+              "id": "sp8",
+              "name": "ai_reason",
+              "value": "={{ $json.ai_ok ? $json.reason.slice(0, 300) : 'Claude returned an error or an answer in the wrong format. Check this search by hand.' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "aaa9e4d9-f856-42f2-952f-7e0402de036d"
+    },
+    {
+      "name": "Read test result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        920,
+        380
+      ],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "rt1",
+              "name": "results_after",
+              "value": "={{ $('Shape proposal').item.json.rewrite ? ($json.keyword?.total ?? 0) : 0 }}",
+              "type": "number"
+            },
+            {
+              "id": "rt2",
+              "name": "top_results",
+              "value": "={{ $('Shape proposal').item.json.rewrite ? ($json.keyword?.results ?? []).slice(0, 3).map(r => r.name).join(' | ').slice(0, 600) : '' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4c7ffa90-ea40-43a6-83ef-0a8b3840d27e"
+    },
+    {
+      "name": "Proposal + test result",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1140,
+        300
+      ],
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "id": "38619a06-4729-4fc5-a1fd-24ed819ae0b6"
+    },
+    {
+      "name": "Decide status",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1360,
+        300
+      ],
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": true,
+        "include": "all",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ds1",
+              "name": "status",
+              "value": "={{ $json.cause === 'ai_failed' ? 'needs_review' : (['not_sold', 'not_a_product_search'].includes($json.cause) || !$json.rewrite) ? 'no_fix' : $json.results_after === 0 ? 'fix_failed_test' : 'pending' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "5616a30b-e304-41fc-81f9-0a6ac102c0ba"
+    },
+    {
+      "name": "Write email line",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        0,
+        860
+      ],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "we1",
+              "name": "status",
+              "value": "={{ $json.status }}",
+              "type": "string"
+            },
+            {
+              "id": "we2",
+              "name": "section",
+              "value": "={{ ({ pending: 1, fix_failed_test: 2, no_fix: 3, needs_review: 4 })[$json.status] ?? 5 }}",
+              "type": "number"
+            },
+            {
+              "id": "we3",
+              "name": "ai_confidence",
+              "value": "={{ $json.ai_confidence }}",
+              "type": "number"
+            },
+            {
+              "id": "we4",
+              "name": "line",
+              "value": "={{ $json.status === 'pending' ? `TO APPROVE: \"${$json.query}\"\\n   Fix: search \"${$json.rewrite}\" instead. It now finds ${$json.results_after} products, for example: ${String($json.top_results).split(' | ')[0]}\\n   Cause: ${$json.cause.replaceAll('_', ' ')}. Claude's confidence ${Number($json.ai_confidence).toFixed(2)}.\\n   Why: ${$json.ai_reason}\\n   Approve or reject: ${$('Load settings').first().json.review_form_url}?proposal_id=${encodeURIComponent($json.proposal_id)}&token=${$json.token}\\n` : $json.status === 'fix_failed_test' ? `STILL FOUND NOTHING, not sent for approval: \"${$json.query}\" tried \"${$json.rewrite}\"` : $json.status === 'no_fix' ? `POSSIBLE DEMAND SIGNAL (${$json.cause.replaceAll('_', ' ')}): \"${$json.query}\"` : `CHECK BY HAND, Claude could not read it: \"${$json.query}\"` }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c606239a-c836-4981-92b4-58c9698881d9"
+    },
+    {
+      "name": "Approvals first",
+      "type": "n8n-nodes-base.sort",
+      "typeVersion": 1,
+      "position": [
+        220,
+        860
+      ],
+      "parameters": {
+        "type": "simple",
+        "sortFieldsUi": {
+          "sortField": [
+            {
+              "fieldName": "section",
+              "order": "ascending"
+            },
+            {
+              "fieldName": "ai_confidence",
+              "order": "descending"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "887e2a41-3fb2-4f13-9ac1-a686d66e9467"
+    },
+    {
+      "name": "Collect lines",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        440,
+        860
+      ],
+      "parameters": {
+        "aggregate": "aggregateIndividualFields",
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "line",
+              "renameField": true,
+              "outputFieldName": "lines"
+            },
+            {
+              "fieldToAggregate": "status",
+              "renameField": true,
+              "outputFieldName": "statuses"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "13c855e4-2318-493d-95e7-63f619f3a7c8"
+    },
+    {
+      "name": "Build owner email",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        660,
+        860
+      ],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "be1",
+              "name": "to",
+              "value": "={{ $('Load settings').first().json.owner_email }}",
+              "type": "string"
+            },
+            {
+              "id": "be2",
+              "name": "subject",
+              "value": "=Zero results this week: {{ $json.statuses.filter(s => s === 'pending').length }} fixes to approve",
+              "type": "string"
+            },
+            {
+              "id": "be3",
+              "name": "text",
+              "value": "=This week {{ $json.lines.length }} new searches returned no products.\n{{ $json.statuses.filter(s => s === 'pending').length }} have a tested fix waiting for you. Nothing changes until you approve.\n\n{{ $json.lines.join('\\n') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d4a0aaae-49e4-438d-9e1f-4a91521ea299"
     }
   ],
   "connections": {
@@ -589,6 +956,83 @@
       "main": [
         [
           {
+            "node": "Clean search text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run each search": {
+      "main": [
+        [
+          {
+            "node": "Keep zero-result searches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load past proposals": {
+      "main": [
+        [
+          {
+            "node": "Skip searches seen before",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Claude: why no results?": {
+      "main": [
+        [
+          {
+            "node": "Read Claude's answer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Test the rewrite": {
+      "main": [
+        [
+          {
+            "node": "Read test result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save proposals": {
+      "main": [
+        [
+          {
+            "node": "Write email line",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Claude: why no results?",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clean search text": {
+      "main": [
+        [
+          {
             "node": "Keep test searches",
             "type": "main",
             "index": 0
@@ -607,33 +1051,16 @@
         ]
       ]
     },
-    "Run each search": {
-      "main": [
-        [
-          {
-            "node": "Keep zero-result searches",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Keep zero-result searches": {
       "main": [
         [
           {
-            "node": "Load past proposals",
+            "node": "Skip searches seen before",
             "type": "main",
             "index": 0
-          }
-        ]
-      ]
-    },
-    "Load past proposals": {
-      "main": [
-        [
+          },
           {
-            "node": "Skip searches seen before",
+            "node": "Load past proposals",
             "type": "main",
             "index": 0
           }
@@ -644,6 +1071,28 @@
       "main": [
         [
           {
+            "node": "Remove repeats",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove repeats": {
+      "main": [
+        [
+          {
+            "node": "Limit to max per run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit to max per run": {
+      "main": [
+        [
+          {
             "node": "Claude: why no results?",
             "type": "main",
             "index": 0
@@ -651,7 +1100,7 @@
         ]
       ]
     },
-    "Claude: why no results?": {
+    "Read Claude's answer": {
       "main": [
         [
           {
@@ -669,11 +1118,27 @@
             "node": "Test the rewrite",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "Proposal + test result",
+            "type": "main",
+            "index": 0
           }
         ]
       ]
     },
-    "Test the rewrite": {
+    "Read test result": {
+      "main": [
+        [
+          {
+            "node": "Proposal + test result",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Proposal + test result": {
       "main": [
         [
           {
@@ -695,7 +1160,29 @@
         ]
       ]
     },
-    "Save proposals": {
+    "Write email line": {
+      "main": [
+        [
+          {
+            "node": "Approvals first",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Approvals first": {
+      "main": [
+        [
+          {
+            "node": "Collect lines",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Collect lines": {
       "main": [
         [
           {
@@ -710,30 +1197,8 @@
       "main": [
         [
           {
-            "node": "Anything new?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Anything new?": {
-      "main": [
-        [
-          {
             "node": "Email the owner",
             "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Claude": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "Claude: why no results?",
-            "type": "ai_languageModel",
             "index": 0
           }
         ]
@@ -751,5 +1216,48 @@
   "meta": {
     "templateCredsSetupCompleted": false
   },
-  "tags": []
+  "tags": [],
+  "nodeGroups": [
+    {
+      "name": "1. Find new zero-result searches",
+      "description": "Loads the shopper searches, runs each one, keeps those with no products that were not handled before.",
+      "nodeNames": [
+        "Get shopper searches",
+        "Clean search text",
+        "Keep test searches",
+        "Run each search",
+        "Keep zero-result searches",
+        "Load past proposals",
+        "Skip searches seen before",
+        "Remove repeats",
+        "Limit to max per run"
+      ]
+    },
+    {
+      "name": "2. Ask Claude and test the fix",
+      "description": "Claude names the cause and one rewrite. The rewrite is run against the same search before anyone sees it.",
+      "nodeNames": [
+        "Claude",
+        "Claude: why no results?",
+        "Read Claude's answer",
+        "Shape proposal",
+        "Test the rewrite",
+        "Read test result",
+        "Proposal + test result",
+        "Decide status",
+        "Save proposals"
+      ]
+    },
+    {
+      "name": "3. Email the owner",
+      "description": "One email: fixes to approve first, highest confidence first, then the rest.",
+      "nodeNames": [
+        "Write email line",
+        "Approvals first",
+        "Collect lines",
+        "Build owner email",
+        "Email the owner"
+      ]
+    }
+  ]
 }

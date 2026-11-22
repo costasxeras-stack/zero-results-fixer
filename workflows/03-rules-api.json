@@ -65,21 +65,8 @@
     },
     {
       "parameters": {
-        "jsCode": "const rules = $input.all().map(i => i.json).filter(r => r.from_query)\n  .map(r => ({ from: r.from_query, to: r.to_query, cause: r.cause, approved_at: r.approved_at }));\nreturn [{ json: { count: rules.length, rules } }];"
-      },
-      "id": "b369361e-78af-5ce3-999e-c17c4c88f369",
-      "name": "Shape rules",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        440,
-        0
-      ]
-    },
-    {
-      "parameters": {
         "respondWith": "json",
-        "responseBody": "={{ $json }}",
+        "responseBody": "={{ { count: $json.rules.filter(r => r.from).length, rules: $json.rules.filter(r => r.from) } }}",
         "options": {}
       },
       "id": "65add961-a492-58e8-ba8a-770912cabbfd",
@@ -87,9 +74,66 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
       "position": [
-        660,
+        880,
         0
       ]
+    },
+    {
+      "name": "Shape each rule",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "r1",
+              "name": "from",
+              "value": "={{ $json.from_query ?? '' }}",
+              "type": "string"
+            },
+            {
+              "id": "r2",
+              "name": "to",
+              "value": "={{ $json.to_query ?? '' }}",
+              "type": "string"
+            },
+            {
+              "id": "r3",
+              "name": "cause",
+              "value": "={{ $json.cause ?? '' }}",
+              "type": "string"
+            },
+            {
+              "id": "r4",
+              "name": "approved_at",
+              "value": "={{ $json.approved_at ?? '' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "309146f6-77b0-4ef3-b4f3-2da2715ed756"
+    },
+    {
+      "name": "One list",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        660,
+        0
+      ],
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "rules",
+        "options": {}
+      },
+      "id": "6987aa47-995f-4619-bbd5-c31c03711def"
     }
   ],
   "connections": {
@@ -108,14 +152,25 @@
       "main": [
         [
           {
-            "node": "Shape rules",
+            "node": "Shape each rule",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Shape rules": {
+    "Shape each rule": {
+      "main": [
+        [
+          {
+            "node": "One list",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "One list": {
       "main": [
         [
           {
