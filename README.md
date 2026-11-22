@@ -51,9 +51,9 @@ The demo runs against my [Search Relevance Lab](https://github.com/costasxeras-s
 
 Setup takes about 30 minutes: [docs/setup-guide.md](docs/setup-guide.md).
 
-## How it was built
+## My role
 
-I framed the problem, chose the guardrails (test before asking, a person approves every fix, one decision per link) and wrote the documentation. Claude (Anthropic) was my engineering partner for building and testing the workflows. Decisions are in [docs/decisions](docs/decisions).
+I framed the problem, chose the guardrails (test before asking, a person approves every fix, one decision per link) and wrote the documentation. Decisions are in [docs/decisions](docs/decisions).
 
 ## Repo layout
 
