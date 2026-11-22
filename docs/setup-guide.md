@@ -8,7 +8,7 @@ About 30 minutes the first time. Use a laptop: the n8n editor is hard to use on 
 |---|---|---|
 | n8n Cloud (or self-hosted n8n 2.x) | Runs the workflows | 14-day free trial |
 | Anthropic | Claude explains each search | Pay as you go (small amounts per search) |
-| Gmail (or any SMTP mailbox) | Weekly emails and alerts | Free |
+| Gmail account | Weekly emails and alerts | Free |
 
 ## 1. Import the six workflows
 
@@ -37,8 +37,8 @@ On n8n Cloud the node can run on n8n's own AI credits: if the credential shows *
 2. In n8n paste it into **API Key**.
 
 **Email** (nodes **Email the owner**, **Email the report**, **Alert owner**)
-For Gmail: Google Account > **Security** > turn on **2-Step Verification** > **App passwords** > create one called n8n.
-In n8n create an **SMTP** credential: User = your Gmail address, Password = the app password, Host = `smtp.gmail.com`, Port = `465`, SSL/TLS = on. Use the same credential in all three nodes.
+These are Gmail nodes. Open **Email the owner**, click **Credential to connect with > Create new credential**, then **Sign in with Google** and allow access. Pick the same credential in the other two nodes.
+On self-hosted n8n you first need a Google OAuth client (see "Google OAuth2 single service" in the n8n docs). Emails are sent from the Gmail account you sign in with, so `from_email` in settings is no longer used.
 
 ✅ No node shows a red warning triangle.
 

@@ -1,6 +1,6 @@
 {
   "name": "zero-results-fixer",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "n8n workflows that find shop searches with no results, have Claude propose a tested fix, and let a person approve it.",
   "private": true,
   "license": "MIT"
