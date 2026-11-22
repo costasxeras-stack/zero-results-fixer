@@ -4,9 +4,9 @@
 
 **Current version:** 0.3.0
 
-![Weekly scan workflow in n8n, version 0.1](docs/screenshots/01-weekly-scan.png)
+![Weekly scan workflow in n8n](docs/screenshots/01-weekly-scan.png)
 
-*The screenshot shows version 0.1, before the Code nodes were replaced with n8n nodes (see the changelog).*
+Demo video (41 seconds, recorded in n8n Cloud): [kostasxeras.com/projects/zero-results-fixer.html#demo](https://kostasxeras.com/projects/zero-results-fixer.html#demo)
 
 ## Why this exists
 
