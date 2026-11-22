@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.0] (22 November 2026)
+
+### Changed
+- The three email steps (owner email, weekly report, error alerts) use n8n's Gmail node instead of the SMTP Send Email node. Setup is now "Sign in with Google" instead of creating a Gmail app password. Emails come from the Gmail account you sign in with, so `from_email` in settings is no longer used.
+
+### Upgrade
+- Re-import workflows 01, 04 and 99, then connect a Gmail credential (setup guide, step 3).
+
 ## [0.2.0] (22 November 2026)
 
 ### Changed

@@ -2,7 +2,7 @@
 
 **An n8n workflow that finds shop searches with no results, has Claude explain why and propose a fix, tests the fix, and lets a person approve it before anything changes.**
 
-**Current version:** 0.2.0
+**Current version:** 0.3.0
 
 ![Weekly scan workflow in n8n, version 0.1](docs/screenshots/01-weekly-scan.png)
 

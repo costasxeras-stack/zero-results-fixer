@@ -419,26 +419,6 @@
       ]
     },
     {
-      "parameters": {
-        "fromEmail": "=Zero Results Fixer <{{ $('Load settings').first().json.from_email }}>",
-        "toEmail": "={{ $json.to }}",
-        "subject": "={{ $json.subject }}",
-        "emailFormat": "text",
-        "text": "={{ $json.text }}",
-        "options": {
-          "appendAttribution": false
-        }
-      },
-      "id": "70e0d85b-ca99-55f3-a70c-f54d0730744b",
-      "name": "Email the owner",
-      "type": "n8n-nodes-base.emailSend",
-      "typeVersion": 2.1,
-      "position": [
-        880,
-        860
-      ]
-    },
-    {
       "name": "Clean search text",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
@@ -916,6 +896,29 @@
         "options": {}
       },
       "id": "d4a0aaae-49e4-438d-9e1f-4a91521ea299"
+    },
+    {
+      "name": "Email the owner",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        880,
+        860
+      ],
+      "webhookId": "411b52ad-de6e-493c-9a09-dec2822a8b0b",
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "={{ $json.to }}",
+        "subject": "={{ $json.subject }}",
+        "emailType": "text",
+        "message": "={{ $json.text }}",
+        "options": {
+          "appendAttribution": false,
+          "senderName": "Zero Results Fixer"
+        }
+      },
+      "id": "6e4a37cf-603a-4533-9733-900b55abfaca"
     }
   ],
   "connections": {
