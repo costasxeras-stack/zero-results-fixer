@@ -18,7 +18,15 @@
 
 Also checked: the weekly report counts causes and statuses, the approval rate (67% of 3 in the test) and the "may not sell" list. The live rules API answered `{"count":0,"rules":[]}` after the update, which is right with no approvals yet.
 
-**v0.3.0 (Gmail node):** the three email steps changed type only. Their inputs are the same and were checked in V3 and the weekly report test. Real delivery needs the Gmail credential and is not tested yet.
+**v0.3.0 live checks on n8n Cloud (22 November 2026, Gmail connected):**
+
+| # | Check | Result |
+|---|---|---|
+| L1 | Weekly report (04) on the real data table | Email delivered to the owner's Gmail: 60 searches, 46 waiting, 5 "may not sell" searches. Numbers match the case study |
+| L2 | Weekly scan (01) on real Search Relevance Lab data | 192 test searches run, 60 with no results, all 60 skipped as already handled. No duplicate email. Same counts as v0.1.1 |
+| L3 | Same, first try | Failed: the free Render service was asleep and answered "Application loading" for all 5 tries (about 25 seconds). The second run worked. A real shop's search would not sleep, but a demo on a free host needs a warm-up call first |
+
+Error alerts (99) are published and set as the error workflow of 01 to 04. They only fire for scheduled or live runs, not manual ones, so they are not tested yet.
 
 **Not covered by v0.2.0 tests:** real Claude answers (the v0.1.1 live run covers those), real email delivery and a scheduled Monday run.
 
